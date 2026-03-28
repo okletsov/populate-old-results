@@ -1,0 +1,24 @@
+{
+  "name": "populate-old-results",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MariaDB connection and information_schema helper",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "schema": "tsx src/cli.ts schema",
+    "query": "tsx src/cli.ts query",
+    "check": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.5",
+    "mariadb": "^3.4.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
