@@ -1,0 +1,18 @@
+{
+    "mcpServers": {
+      "mariadb-prod": {
+        "command": "ssh",
+        "args": [
+          "-i", "C:\\Users\\username\\pathto\\ssh-key.key",
+          "-o", "BatchMode=yes",
+          "ubuntuusername@ipaddress",
+          "node",
+          "/opt/mcp-mysql/dist/index.js",
+          "--config",
+          "/home/ubuntuusername/.mcp-mysql/config.json",
+          "--label",
+          "mcp-server-label"
+        ]
+      }
+    }
+  }
