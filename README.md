@@ -48,13 +48,13 @@ Restrictions:
 From the project directory, with `.env` configured for Google Vision:
 
 ```powershell
-npm run ocr -- --input data_files/screenshots/@arabijoni.jpg
+npm run ocr -- --input data_files/data_to_process/2013_spring/arabijoni.JPG
 ```
 
-By default, the JSON file is written to `VISION_OUTPUT_DIR` using the image file name:
+By default, the JSON file is written to `VISION_OUTPUT_DIR` using the image file name. Set `VISION_OUTPUT_DIR` to the relevant `data_files/data_to_process/<season>` folder:
 
 ```text
-data_files/vision_text/@arabijoni.json
+data_files/data_to_process/2013_spring/arabijoni.json
 ```
 
 The JSON output is a top-level array of OCR entries. Each entry contains only a `description` field.
@@ -62,7 +62,7 @@ The JSON output is a top-level array of OCR entries. Each entry contains only a 
 To choose an explicit output file:
 
 ```powershell
-npm run ocr -- --input data_files/screenshots/arabijoni.jpg --output data_files/vision_text/arabijoni.json
+npm run ocr -- --input data_files/data_to_process/2013_spring/arabijoni.JPG --output data_files/data_to_process/2013_spring/arabijoni.json
 ```
 
 Parameters:
