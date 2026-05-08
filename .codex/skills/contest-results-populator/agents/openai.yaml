@@ -1,0 +1,4 @@
+interface:
+  display_name: "Contest Results Populator"
+  short_description: "Populate contest result CSVs from raw text and OCR screenshots."
+  default_prompt: "Populate contest result CSVs for a contest key like 2013_spring."
