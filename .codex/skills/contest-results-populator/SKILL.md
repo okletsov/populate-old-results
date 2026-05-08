@@ -33,6 +33,10 @@ Use `--skip-ocr` only when OCR JSON sidecars already exist or when the user want
 - Parses raw placements, ROI, explicit bet counts, incomplete/disqualified status, and side awards.
 - Parses OCR JSON `Total` rows for Total Predictions, Won, Lost, Units, and optional OCR ROI.
 - Preserves existing CSV headers exactly.
+- Normalizes `cr_general` values:
+  - If `orig_bets_count` is blank after processing, sets it to `100`.
+  - If `won` is blank and `roi` is present, sets `won = 100 + roi`.
+  - Strips a leading `+` from positive ROI values (stores ROI without `%`).
 - Writes these files when `--apply` is used:
   - `<contest>_cr_general.csv`
   - `<contest>_cr_biggest_odds.csv`

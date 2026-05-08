@@ -52,7 +52,7 @@ const generalPath = path.join(outputDir, `${prefix}_cr_general.csv`);
 const oddsPath = path.join(outputDir, `${prefix}_cr_biggest_odds.csv`);
 const streakPath = path.join(outputDir, `${prefix}_cr_winning_streak.csv`);
 
-const generalCsv = mergeCsv(generalPath, GENERAL_HEADER, rows, "nickname");
+const generalCsv = normalizeGeneralCsvText(mergeCsv(generalPath, GENERAL_HEADER, rows, "nickname"));
 const oddsCsv = mergeCsv(
   oddsPath,
   BIGGEST_ODDS_HEADER,
@@ -136,7 +136,10 @@ function parsePlacementLine(line) {
   const match = line.match(/^(\d+)\s+(?:место|place)\.?\s+(.+?)\s+-\s+(.+)$/i);
   if (!match) return null;
   const [, place, nickname, tail] = match;
-  const roi = findNumberAfter(tail, /ROI\s*:/i);
+  const roi = firstNonEmpty(
+    findNumberAfter(tail, /ROI\s*:/i),
+    findPercentNumber(tail)
+  );
   const explicitCount = firstNonEmpty(
     findNumberAfter(tail, /Predictions\s*:/i),
     findFirstNumber(tail.match(/\((\d+(?:[.,]\d+)?)\s*(?:став|bet)/i)?.[1] ?? "")
@@ -257,33 +260,34 @@ function buildGeneralRows(placements, ocrByName, context) {
   const participantCount = placements.length;
   return placements.map((placement) => {
     const ocr = ocrByName.get(normalizeName(placement.nickname));
-    const orig = firstNonEmpty(placement.explicitCount, placement.predictions, ocr?.predictions);
+    const orig = defaultOrigBetsCount(firstNonEmpty(placement.explicitCount, placement.predictions, ocr?.predictions));
     const finalCount = context.isMonthly ? orig : "100";
-    const roi = firstNonEmpty(placement.roi, ocr?.ocrRoi);
+    const roi = normalizeRoi(firstNonEmpty(placement.roi, ocr?.ocrRoi));
 
     if (!context.isMonthly && orig) {
       const numericOrig = Number(orig);
-      if (numericOrig < 100) {
-        context.notes.push(`${placement.nickname}: seasonal orig_bets_count is below 100 (${orig}).`);
+      if (numericOrig !== 100) {
+        context.notes.push(`${placement.nickname}: seasonal orig_bets_count is not 100 (${orig}).`);
       }
       if (numericOrig > 100) {
         context.notes.push(`${placement.nickname}: seasonal orig_bets_count is above 100 (${orig}); source requires review.`);
       }
     }
-    if (placement.roi && ocr?.ocrRoi && Number(placement.roi) !== Number(ocr.ocrRoi)) {
-      context.notes.push(`${placement.nickname}: raw ROI (${placement.roi}) differs from OCR ROI (${ocr.ocrRoi}); raw ROI kept.`);
+    if (placement.roi && ocr?.ocrRoi && Number(normalizeRoi(placement.roi)) !== Number(normalizeRoi(ocr.ocrRoi))) {
+      context.notes.push(`${placement.nickname}: raw ROI (${normalizeRoi(placement.roi)}) differs from OCR ROI (${normalizeRoi(ocr.ocrRoi)}); raw ROI kept.`);
     }
     if (placement.predictions && ocr?.predictions && Number(placement.predictions) !== Number(ocr.predictions)) {
       context.notes.push(`${placement.nickname}: raw Predictions (${placement.predictions}) differs from OCR Total Predictions (${ocr.predictions}).`);
     }
 
+    const won = firstNonEmpty(placement.won, ocr?.won);
     return {
       annual_points: String(annualPoints(Number(placement.place), participantCount)),
       nickname: placement.nickname,
       place: placement.place,
       final_bets_count: finalCount,
       orig_bets_count: orig,
-      won: firstNonEmpty(placement.won, ocr?.won),
+      won: firstNonEmpty(won, deriveWonFromRoi(roi)),
       lost: firstNonEmpty(placement.lost, ocr?.lost),
       units: firstNonEmpty(placement.units, ocr?.units),
       roi
@@ -327,6 +331,36 @@ function mergeCsv(filePath, defaultHeader, updates, keyColumn) {
   return [existing.header.join(","), ...orderedRows.map((row) => row.join(","))].join("\n") + "\n";
 }
 
+function normalizeGeneralCsvText(csvText) {
+  const lines = String(csvText ?? "").split(/\r?\n/);
+  const header = lines[0]?.split(",") ?? [];
+  const roiIndex = header.indexOf("roi");
+  const origIndex = header.indexOf("orig_bets_count");
+  const wonIndex = header.indexOf("won");
+  if (roiIndex < 0 && origIndex < 0 && wonIndex < 0) return csvText;
+
+  const out = [lines[0]];
+  for (const line of lines.slice(1)) {
+    if (line.length === 0) continue;
+    const cols = line.split(",");
+
+    const roi = normalizeRoi(cols[roiIndex] ?? "");
+    if (roiIndex >= 0) cols[roiIndex] = roi;
+
+    if (origIndex >= 0) {
+      cols[origIndex] = defaultOrigBetsCount(cols[origIndex] ?? "");
+    }
+
+    if (wonIndex >= 0) {
+      const won = String(cols[wonIndex] ?? "");
+      if (!won && roi) cols[wonIndex] = deriveWonFromRoi(roi);
+    }
+
+    out.push(cols.join(","));
+  }
+  return out.join("\n") + "\n";
+}
+
 function readCsv(filePath, defaultHeader) {
   if (!existsSync(filePath)) return { header: defaultHeader, rows: [] };
   const lines = readFileSync(filePath, "utf8").split(/\r?\n/).filter((line) => line.length > 0);
@@ -346,12 +380,24 @@ function findFirstNumber(text) {
   return normalizeNumber(match?.[0] ?? "");
 }
 
+function findPercentNumber(text) {
+  // Raw result lines often use "+11.3%" instead of an explicit "ROI:" label.
+  // AGENTS.md requires storing ROI as a numeric percentage without the "%" sign.
+  const match = String(text ?? "").match(/([+-]?\d+(?:[.,]\d+)?)\s*%/);
+  return normalizeNumber(match?.[1] ?? "");
+}
+
 function isNumericToken(value) {
   return /^[+-]?\d+(?:[.,]\d+)?$/.test(String(value ?? "").trim());
 }
 
 function normalizeNumber(value) {
   return value ? String(value).replace(",", ".") : "";
+}
+
+function normalizeRoi(value) {
+  const normalized = normalizeNumber(String(value ?? "").trim());
+  return normalized.startsWith("+") ? normalized.slice(1) : normalized;
 }
 
 function normalizeName(value) {
@@ -363,6 +409,22 @@ function firstNonEmpty(...values) {
     if (value !== undefined && value !== null && String(value).length > 0) return String(value);
   }
   return "";
+}
+
+function defaultOrigBetsCount(value) {
+  const v = String(value ?? "").trim();
+  return v.length > 0 ? v : "100";
+}
+
+function deriveWonFromRoi(roiValue) {
+  const roi = normalizeRoi(roiValue);
+  if (!roi) return "";
+  const roiNumber = Number(roi);
+  if (!Number.isFinite(roiNumber)) return "";
+
+  const decimals = roi.includes(".") ? roi.split(".")[1].length : 0;
+  const total = 100 + roiNumber;
+  return decimals > 0 ? total.toFixed(decimals) : String(total);
 }
 
 function printSummary(summary) {
