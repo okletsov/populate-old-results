@@ -1,0 +1,6 @@
+1 место. Stan - Predictions: 150, Won: 157.58, Lost: 59, +/-: 7.58 ROI: 5.1%, ср. коф: 1.73.
+2 место. BeTeLGeuSe - Predictions: 1660, Won: 1710.81, Lost: 725, +/-: 50.81 ROI: 3.1%, ср. коф: 1.83.
+3 место. Deagle - Predictions: 936, Won: 938.55, Lost: 412, +/-: 2.55 ROI: 0.3%, ср. коф: 1.79.
+4 место. Mavri_Petalouda - Predictions: 771, Won: 771.71, Lost: 341, +/-: 0.71 ROI: 0.1%, ср. коф: 1.79.
+Наибольшая выигрышная серия - BeTeLGeuSe - 72 ставки.
+Наивысший зашедший коэффициент - Mavri_Petalouda - 10.00.

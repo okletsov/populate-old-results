@@ -8,9 +8,11 @@
     "build": "tsc -p tsconfig.json",
     "schema": "tsx src/cli.ts schema",
     "query": "tsx src/cli.ts query",
+    "ocr": "tsx src/cli.ts ocr",
     "check": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@google-cloud/vision": "^5.3.6",
     "commander": "^12.1.0",
     "dotenv": "^16.4.5",
     "mariadb": "^3.4.0",

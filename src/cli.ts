@@ -1,8 +1,9 @@
 import { Command } from "commander";
-import { getDbConfig } from "./config/env.js";
+import { getDbConfig, getVisionConfig } from "./config/env.js";
 import { createPool, closePool } from "./db/mariadbClient.js";
 import { executeReadOnlySelect } from "./db/runSelect.js";
 import { getInformationSchemaSnapshot } from "./db/schemaIntrospector.js";
+import { convertImageToJson } from "./ocr/visionOcr.js";
 
 const program = new Command();
 
@@ -44,6 +45,21 @@ program
     } finally {
       await closePool();
     }
+  });
+
+program
+  .command("ocr")
+  .description("Extract text from an image using Google Vision and write JSON output")
+  .requiredOption("--input <path>", "Screenshot or image path")
+  .option("--output <path>", "JSON output path")
+  .action(async (options) => {
+    const outputPath = await convertImageToJson({
+      input: String(options.input),
+      output: options.output === undefined ? undefined : String(options.output),
+      config: getVisionConfig()
+    });
+
+    console.log(`Wrote ${outputPath}`);
   });
 
 program.parseAsync(process.argv).catch((error: unknown) => {
