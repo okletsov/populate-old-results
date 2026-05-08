@@ -15,6 +15,43 @@ Connects to MariaDB using environment variables and reads `information_schema` f
 - `npm run query` — Run one read-only `SELECT` (or `WITH ... SELECT`); pass SQL with `--sql`
 - `npm run ocr` — Extract text from an image using Google Vision and write description-only JSON; pass the image path with `--input`
 
+### Populate contest result CSVs (from raw text + OCR screenshots)
+
+This repository includes a bundled “contest results populator” script that fills (or updates) contest result CSVs in `data_files/contest_results/<contest>/` using:
+
+- raw contest result text from `data_files/data_to_process/<contest>/`
+- OCR JSON sidecars generated from screenshots in `data_files/data_to_process/<contest>/`
+
+Before populating results, read and follow the rules in `AGENTS.md` (encoding, source priority, header preservation, bet count rules, and what to notify on).
+
+**Dry run (default)**:
+
+```powershell
+node .codex/skills/contest-results-populator/scripts/populate-contest-results.mjs --contest 2013_spring
+```
+
+**Apply changes (writes CSVs)**:
+
+```powershell
+node .codex/skills/contest-results-populator/scripts/populate-contest-results.mjs --contest 2013_spring --apply
+```
+
+**Skip OCR (only if OCR JSON sidecars already exist, or you want an offline parse)**:
+
+```powershell
+node .codex/skills/contest-results-populator/scripts/populate-contest-results.mjs --contest 2013_spring --skip-ocr
+```
+
+Notes:
+
+- The script **preserves existing CSV headers** and writes:
+  - `<contest>_cr_general.csv`
+  - `<contest>_cr_biggest_odds.csv`
+  - `<contest>_cr_winning_streak.csv`
+- For monthly contest keys like `2017_spring_mon_1`, inputs/outputs live under the season folder (e.g. `2017_spring`), but the CSV prefix uses the full key.
+- Raw contest text may be **Windows-1251** encoded; the script reads it accordingly.
+- Seasonal contests use `final_bets_count = 100` (monthly contests do not).
+
 ### Run a simple SELECT
 
 From the project directory, with `.env` configured:

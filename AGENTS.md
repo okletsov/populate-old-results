@@ -12,7 +12,7 @@ These rules apply to AI-assisted work in this repository.
 - Seasonal contests always use `final_bets_count = 100`; monthly contests do not use this fixed final count rule.
 - For seasonal contests, `orig_bets_count` may be lower than `100` but must not be greater than `100`.
 - If OCR or raw text implies `orig_bets_count > 100` for a seasonal contest, do not silently normalize it. Notify the user and report the source value.
-- Notify the user when raw text and OCR disagree on ROI, bet counts, or placement, or when a seasonal participant has `orig_bets_count < 100`.
+- Notify the user when raw text and OCR disagree on ROI, bet counts, or placement, or when a seasonal participant has `orig_bets_count != 100`.
 
 ## OCR Screenshot Processing
 

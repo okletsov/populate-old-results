@@ -43,7 +43,7 @@ Use `--skip-ocr` only when OCR JSON sidecars already exist or when the user want
 After running the script, inspect the printed notifications. Call out anything important in the final answer, especially:
 
 - raw text and OCR disagreements on ROI, bet counts, or placement.
-- seasonal `orig_bets_count < 100`.
+- seasonal `orig_bets_count != 100`.
 - seasonal `orig_bets_count > 100`, which must not be silently normalized.
 - missing raw side-award data for biggest odds or winning streak.
 - OCR JSON rows that could not be parsed into Total Predictions, Won, Lost, and Units.
