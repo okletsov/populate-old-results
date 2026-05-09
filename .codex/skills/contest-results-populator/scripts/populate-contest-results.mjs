@@ -50,14 +50,17 @@ const raw = parseRawText(rawText);
 
 const jsonFiles = ensureOcrJsonSidecars(inputDir, options);
 const ocrByNickname = parseOcrJsonFiles(jsonFiles);
-const rows = buildGeneralRows(raw.placements, ocrByNickname, { isMonthly, notes });
+const rows = buildGeneralRows(raw.placements, ocrByNickname, { isMonthly, notes, contestKey: contest });
 const awards = raw.awards;
 
 const generalPath = path.join(outputDir, `${prefix}_cr_general.csv`);
 const oddsPath = path.join(outputDir, `${prefix}_cr_biggest_odds.csv`);
 const streakPath = path.join(outputDir, `${prefix}_cr_winning_streak.csv`);
 
-const generalCsv = normalizeGeneralCsvText(mergeCsv(generalPath, GENERAL_HEADER, rows, "nickname"));
+const generalCsv = normalizeGeneralCsvText(
+  mergeCsv(generalPath, GENERAL_HEADER, rows, "nickname"),
+  { contestKey: prefix }
+);
 const oddsCsv = mergeCsv(
   oddsPath,
   BIGGEST_ODDS_HEADER,
@@ -294,6 +297,7 @@ function buildGeneralRows(placements, ocrByName, context) {
     const orig = defaultOrigBetsCount(firstNonEmpty(placement.explicitCount, placement.predictions, ocr?.predictions));
     const finalCount = context.isMonthly ? orig : "100";
     const roi = normalizeRoi(firstNonEmpty(placement.roi, ocr?.ocrRoi));
+    const deriveUnitsFromRoi = context.contestKey !== "2012_autumn";
 
     if (!context.isMonthly && orig) {
       const numericOrig = Number(orig);
@@ -323,6 +327,14 @@ function buildGeneralRows(placements, ocrByName, context) {
       );
     }
     const won = firstNonEmpty(placement.won, derivedWon, ocr?.won);
+
+    const derivedUnits = deriveUnitsFromRoi ? roi : "";
+    if (deriveUnitsFromRoi && roi && ocr?.units && Number(roi) !== Number(ocr.units)) {
+      context.notes.push(
+        `${placement.nickname}: derived Units from ROI (${roi}) differs from OCR Units (${ocr.units}); derived Units kept.`
+      );
+    }
+    const units = deriveUnitsFromRoi ? derivedUnits : firstNonEmpty(placement.units, ocr?.units);
     return {
       annual_points: String(annualPoints(Number(placement.place), participantCount)),
       nickname: placement.nickname,
@@ -331,7 +343,7 @@ function buildGeneralRows(placements, ocrByName, context) {
       orig_bets_count: orig,
       won,
       lost: firstNonEmpty(placement.lost, ocr?.lost),
-      units: firstNonEmpty(placement.units, ocr?.units),
+      units,
       roi
     };
   });
@@ -373,12 +385,14 @@ function mergeCsv(filePath, defaultHeader, updates, keyColumn) {
   return [existing.header.join(","), ...orderedRows.map((row) => row.join(","))].join("\n") + "\n";
 }
 
-function normalizeGeneralCsvText(csvText) {
+function normalizeGeneralCsvText(csvText, options = {}) {
+  const contestKey = String(options.contestKey ?? "");
   const lines = String(csvText ?? "").split(/\r?\n/);
   const header = lines[0]?.split(",") ?? [];
   const roiIndex = header.indexOf("roi");
   const origIndex = header.indexOf("orig_bets_count");
   const wonIndex = header.indexOf("won");
+  const unitsIndex = header.indexOf("units");
   if (roiIndex < 0 && origIndex < 0 && wonIndex < 0) return csvText;
 
   const out = [lines[0]];
@@ -396,6 +410,10 @@ function normalizeGeneralCsvText(csvText) {
     if (wonIndex >= 0) {
       const won = String(cols[wonIndex] ?? "");
       if (!won && roi) cols[wonIndex] = deriveWonFromRoi(roi);
+    }
+
+    if (unitsIndex >= 0 && contestKey !== "2012_autumn") {
+      cols[unitsIndex] = roi;
     }
 
     out.push(cols.join(","));

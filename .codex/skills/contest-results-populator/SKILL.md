@@ -38,6 +38,7 @@ If the folder contains **`Итоговые результаты.txt`**, the scri
 - Normalizes `cr_general` values:
   - If `orig_bets_count` is blank after processing, sets it to `100`.
   - If `won` is blank and `roi` is present, sets `won = 100 + roi`.
+  - Sets `units = roi` (exception: `2012_autumn`).
   - Strips a leading `+` from positive ROI values (stores ROI without `%`).
 - Writes these files when `--apply` is used:
   - `<contest>_cr_general.csv`
@@ -51,6 +52,7 @@ After running the script, inspect the printed notifications. Call out anything i
 - raw text and OCR disagreements on ROI, bet counts, or placement.
 - raw text `Won` / `Lost` differing from OCR screenshot totals for the same participant.
 - derived `won` (computed as `100 + roi` when raw `won` is missing) differing from OCR `Won` (derived value is kept).
+- derived `units` (always `units = roi`, except `2012_autumn`) differing from OCR `Units` (derived value is kept).
 - seasonal `orig_bets_count != 100`.
 - missing raw side-award data for biggest odds or winning streak.
 - OCR JSON rows that could not be parsed into Total Predictions, Won, Lost, and Units.
