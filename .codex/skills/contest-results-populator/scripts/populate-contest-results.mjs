@@ -298,10 +298,9 @@ function buildGeneralRows(placements, ocrByName, context) {
     if (!context.isMonthly && orig) {
       const numericOrig = Number(orig);
       if (numericOrig !== 100) {
-        context.notes.push(`${placement.nickname}: seasonal orig_bets_count is not 100 (${orig}).`);
-      }
-      if (numericOrig > 100) {
-        context.notes.push(`${placement.nickname}: seasonal orig_bets_count is above 100 (${orig}); source requires review.`);
+        context.notes.push(
+          `${placement.nickname}: seasonal orig_bets_count is not 100 (${orig}); source requires review.`
+        );
       }
     }
     if (placement.roi && ocr?.ocrRoi && Number(normalizeRoi(placement.roi)) !== Number(normalizeRoi(ocr.ocrRoi))) {
@@ -317,14 +316,20 @@ function buildGeneralRows(placements, ocrByName, context) {
       context.notes.push(`${placement.nickname}: raw Lost (${placement.lost}) differs from OCR Lost (${ocr.lost}).`);
     }
 
-    const won = firstNonEmpty(placement.won, ocr?.won);
+    const derivedWon = deriveWonFromRoi(roi);
+    if (!placement.won && derivedWon && ocr?.won && Number(derivedWon) !== Number(ocr.won)) {
+      context.notes.push(
+        `${placement.nickname}: derived Won from ROI (${derivedWon}) differs from OCR Won (${ocr.won}); derived Won kept.`
+      );
+    }
+    const won = firstNonEmpty(placement.won, derivedWon, ocr?.won);
     return {
       annual_points: String(annualPoints(Number(placement.place), participantCount)),
       nickname: placement.nickname,
       place: placement.place,
       final_bets_count: finalCount,
       orig_bets_count: orig,
-      won: firstNonEmpty(won, deriveWonFromRoi(roi)),
+      won,
       lost: firstNonEmpty(placement.lost, ocr?.lost),
       units: firstNonEmpty(placement.units, ocr?.units),
       roi

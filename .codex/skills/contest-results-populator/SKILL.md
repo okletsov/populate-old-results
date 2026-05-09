@@ -50,8 +50,8 @@ After running the script, inspect the printed notifications. Call out anything i
 
 - raw text and OCR disagreements on ROI, bet counts, or placement.
 - raw text `Won` / `Lost` differing from OCR screenshot totals for the same participant.
+- derived `won` (computed as `100 + roi` when raw `won` is missing) differing from OCR `Won` (derived value is kept).
 - seasonal `orig_bets_count != 100`.
-- seasonal `orig_bets_count > 100`, which must not be silently normalized.
 - missing raw side-award data for biggest odds or winning streak.
 - OCR JSON rows that could not be parsed into Total Predictions, Won, Lost, and Units.
 
