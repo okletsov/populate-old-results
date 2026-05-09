@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { TextDecoder } from "node:util";
 
@@ -17,6 +17,9 @@ const GENERAL_HEADER = [
 ];
 const BIGGEST_ODDS_HEADER = ["nickname", "user_pick_value"];
 const WINNING_STREAK_HEADER = ["nickname", "strick_length", "strick_avg_odds"];
+
+/** Default raw-results filename sometimes dropped into data_to_process (UTF-8). */
+const FINAL_RESULTS_TXT = "\u0418\u0442\u043e\u0433\u043e\u0432\u044b\u0435 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u044b.txt";
 
 const options = parseArgs(process.argv.slice(2));
 if (!options.contest) {
@@ -39,6 +42,8 @@ if (!existsSync(inputDir)) {
 if (!existsSync(outputDir) && options.apply) {
   mkdirSync(outputDir, { recursive: true });
 }
+
+maybeRenameFinalResultsTxt(inputDir, prefix, options.apply);
 
 const rawText = readRawText(inputDir, outputDir, prefix);
 const raw = parseRawText(rawText);
@@ -101,9 +106,35 @@ function resolveExistingInputDir(root, fullKey, baseKey) {
   return path.join(root, "data_files", "data_to_process", baseKey);
 }
 
+/**
+ * If `Итоговые результаты.txt` exists in the contest folder, rename it to `<contest>_raw.txt`
+ * when `--apply` is used so later runs and tooling see the standard name.
+ * Dry run does not rename; `readRawText` still reads the Russian filename if `_raw.txt` is missing.
+ */
+function maybeRenameFinalResultsTxt(inputDirValue, prefixValue, apply) {
+  const from = path.join(inputDirValue, FINAL_RESULTS_TXT);
+  const to = path.join(inputDirValue, `${prefixValue}_raw.txt`);
+  if (!existsSync(from)) return;
+  if (existsSync(to)) {
+    notes.push(
+      `"Итоговые результаты.txt" is present but ${prefixValue}_raw.txt already exists; not renaming. Remove or rename one of them if this is wrong.`
+    );
+    return;
+  }
+  if (!apply) {
+    notes.push(
+      `Using "Итоговые результаты.txt" as raw input (dry run). Run with --apply to rename it to ${prefixValue}_raw.txt.`
+    );
+    return;
+  }
+  renameSync(from, to);
+  notes.push(`Renamed "Итоговые результаты.txt" to ${prefixValue}_raw.txt.`);
+}
+
 function readRawText(inputDirValue, outputDirValue, prefixValue) {
   const candidates = [
     path.join(inputDirValue, `${prefixValue}_raw.txt`),
+    path.join(inputDirValue, FINAL_RESULTS_TXT),
     path.join(outputDirValue, `${prefixValue}_raw.txt`)
   ];
   const found = candidates.find((candidate) => existsSync(candidate));
@@ -278,6 +309,12 @@ function buildGeneralRows(placements, ocrByName, context) {
     }
     if (placement.predictions && ocr?.predictions && Number(placement.predictions) !== Number(ocr.predictions)) {
       context.notes.push(`${placement.nickname}: raw Predictions (${placement.predictions}) differs from OCR Total Predictions (${ocr.predictions}).`);
+    }
+    if (placement.won && ocr?.won && Number(normalizeNumber(placement.won)) !== Number(normalizeNumber(ocr.won))) {
+      context.notes.push(`${placement.nickname}: raw Won (${placement.won}) differs from OCR Won (${ocr.won}).`);
+    }
+    if (placement.lost && ocr?.lost && Number(normalizeNumber(placement.lost)) !== Number(normalizeNumber(ocr.lost))) {
+      context.notes.push(`${placement.nickname}: raw Lost (${placement.lost}) differs from OCR Lost (${ocr.lost}).`);
     }
 
     const won = firstNonEmpty(placement.won, ocr?.won);

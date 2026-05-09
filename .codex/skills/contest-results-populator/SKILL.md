@@ -23,12 +23,14 @@ node .codex/skills/contest-results-populator/scripts/populate-contest-results.mj
 
 Use `--skip-ocr` only when OCR JSON sidecars already exist or when the user wants an offline parse.
 
+If the folder contains **`Итоговые результаты.txt`**, the script treats it as the raw results file: with **`--apply`** it **renames** it to **`<contest>_raw.txt`** (for example `2014_summer_raw.txt`) before parsing. On a **dry run** it reads that file without renaming and prints a notification suggesting `--apply` to rename.
+
 ## What The Script Does
 
 - Resolves input files from `data_files/data_to_process/<contest>/`.
 - Resolves output CSVs from `data_files/contest_results/<contest>/`.
 - For monthly contest keys such as `2017_spring_mon_1`, uses `2017_spring` as the folder and the full key as the CSV prefix.
-- Reads raw text as Windows-1251.
+- Reads raw text as Windows-1251 (from `<contest>_raw.txt`, or from `Итоговые результаты.txt` when the standard name is not present).
 - Generates missing OCR JSON sidecars from screenshots with `npm run ocr`.
 - Parses raw placements, ROI, explicit bet counts, incomplete/disqualified status, and side awards.
 - Parses OCR JSON `Total` rows for Total Predictions, Won, Lost, Units, and optional OCR ROI.
@@ -47,6 +49,7 @@ Use `--skip-ocr` only when OCR JSON sidecars already exist or when the user want
 After running the script, inspect the printed notifications. Call out anything important in the final answer, especially:
 
 - raw text and OCR disagreements on ROI, bet counts, or placement.
+- raw text `Won` / `Lost` differing from OCR screenshot totals for the same participant.
 - seasonal `orig_bets_count != 100`.
 - seasonal `orig_bets_count > 100`, which must not be silently normalized.
 - missing raw side-award data for biggest odds or winning streak.
