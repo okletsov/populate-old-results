@@ -21,7 +21,13 @@ The default mode is a dry run. When the user explicitly asks to populate or impl
 node .codex/skills/contest-results-populator/scripts/populate-contest-results.mjs --contest 2013_spring --apply
 ```
 
+```powershell
+node .codex/skills/contest-results-populator/scripts/populate-contest-results.mjs --contest 2013_spring --apply --clamp-seasonal-orig-max-100
+```
+
 Use `--skip-ocr` only when OCR JSON sidecars already exist or when the user wants an offline parse.
+
+Optional: **`--clamp-seasonal-orig-max-100`** — for **non-monthly** contests only, after merge, sets `orig_bets_count` greater than **100** to **100** in `cr_general`, logs one notification per clamped row, and skips the usual “seasonal orig_bets_count is not 100” warning for those rows when the value was above 100. **Default runs do not clamp** (see [AGENTS.md](../../../AGENTS.md): do not silently override OCR/raw without an explicit choice).
 
 If the folder contains **`Итоговые результаты.txt`**, the script treats it as the raw results file: with **`--apply`** it **renames** it to **`<contest>_raw.txt`** (for example `2014_summer_raw.txt`) before parsing. On a **dry run** it reads that file without renaming and prints a notification suggesting `--apply` to rename.
 
@@ -33,6 +39,9 @@ If the folder contains **`Итоговые результаты.txt`**, the scri
 - Reads raw text as Windows-1251 (from `<contest>_raw.txt`, or from `Итоговые результаты.txt` when the standard name is not present).
 - Generates missing OCR JSON sidecars from screenshots with `npm run ocr`.
 - Parses raw placements, ROI, explicit bet counts, incomplete/disqualified status, and side awards.
+- **Placements:** Recognizes both `N место. Nickname - …` / `N place. …` and alternate **numbered lines** `N. Nickname …` (ROI from `ROI:` or `%`).
+- **Biggest odds:** One raw line can list **several winners** with the same coefficient, separated by **commas** or **и** (e.g. `… - AjaxSpring, ka1manua, Deagle - 10.00`). Each nickname becomes one CSV row. Odds lines are detected using coefficient wording including common typos **`кофф`** / **`коф.`** alongside `коэффициент`, `коеф`, `odds`, etc.
+- **Winning streak:** If the raw line includes average coefficient text such as `(ср. коф. 1.86)`, **`strick_avg_odds`** is filled when the pattern matches.
 - Parses OCR JSON `Total` rows for Total Predictions, Won, Lost, Units, and optional OCR ROI.
 - Preserves existing CSV headers exactly.
 - Normalizes `cr_general` values:
@@ -40,6 +49,7 @@ If the folder contains **`Итоговые результаты.txt`**, the scri
   - If `won` is blank and `roi` is present, sets `won = 100 + roi`.
   - Sets `units = roi` (exception: `2012_autumn`).
   - Strips a leading `+` from positive ROI values (stores ROI without `%`).
+  - With **`--clamp-seasonal-orig-max-100`**, caps seasonal `orig_bets_count` at **100** when it would otherwise exceed 100 (see above).
 - Writes these files when `--apply` is used:
   - `<contest>_cr_general.csv`
   - `<contest>_cr_biggest_odds.csv`

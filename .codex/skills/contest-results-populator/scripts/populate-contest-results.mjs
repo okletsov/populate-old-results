@@ -23,7 +23,9 @@ const FINAL_RESULTS_TXT = "\u0418\u0442\u043e\u0433\u043e\u0432\u044b\u0435 \u04
 
 const options = parseArgs(process.argv.slice(2));
 if (!options.contest) {
-  fail("Usage: node populate-contest-results.mjs --contest <contest_key> [--apply] [--skip-ocr]");
+  fail(
+    "Usage: node populate-contest-results.mjs --contest <contest_key> [--apply] [--skip-ocr] [--clamp-seasonal-orig-max-100]"
+  );
 }
 
 const repoRoot = process.cwd();
@@ -50,21 +52,28 @@ const raw = parseRawText(rawText);
 
 const jsonFiles = ensureOcrJsonSidecars(inputDir, options);
 const ocrByNickname = parseOcrJsonFiles(jsonFiles);
-const rows = buildGeneralRows(raw.placements, ocrByNickname, { isMonthly, notes, contestKey: contest });
+const rows = buildGeneralRows(raw.placements, ocrByNickname, {
+  isMonthly,
+  notes,
+  contestKey: contest,
+  clampSeasonalOrigMax100: options.clampSeasonalOrigMax100
+});
 const awards = raw.awards;
 
 const generalPath = path.join(outputDir, `${prefix}_cr_general.csv`);
 const oddsPath = path.join(outputDir, `${prefix}_cr_biggest_odds.csv`);
 const streakPath = path.join(outputDir, `${prefix}_cr_winning_streak.csv`);
 
-const generalCsv = normalizeGeneralCsvText(
-  mergeCsv(generalPath, GENERAL_HEADER, rows, "nickname"),
-  { contestKey: prefix }
-);
+const generalCsv = normalizeGeneralCsvText(mergeCsv(generalPath, GENERAL_HEADER, rows, "nickname"), {
+  contestKey: prefix,
+  isMonthly,
+  clampSeasonalOrigMax100: options.clampSeasonalOrigMax100,
+  notes
+});
 const oddsCsv = mergeCsv(
   oddsPath,
   BIGGEST_ODDS_HEADER,
-  awards.biggestOdds ? [awards.biggestOdds] : [],
+  awards.biggestOdds ?? [],
   "nickname"
 );
 const streakCsv = mergeCsv(
@@ -92,12 +101,13 @@ printSummary({
 });
 
 function parseArgs(args) {
-  const parsed = { apply: false, skipOcr: false, contest: "" };
+  const parsed = { apply: false, skipOcr: false, clampSeasonalOrigMax100: false, contest: "" };
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i];
     if (arg === "--contest") parsed.contest = args[++i] ?? "";
     else if (arg === "--apply") parsed.apply = true;
     else if (arg === "--skip-ocr") parsed.skipOcr = true;
+    else if (arg === "--clamp-seasonal-orig-max-100") parsed.clampSeasonalOrigMax100 = true;
     else fail(`Unknown argument: ${arg}`);
   }
   return parsed;
@@ -151,7 +161,7 @@ function readRawText(inputDirValue, outputDirValue, prefixValue) {
 
 function parseRawText(text) {
   const placements = [];
-  const awards = {};
+  const awards = { biggestOdds: [] };
   for (const line of text.split(/\r?\n/).map((value) => value.trim()).filter(Boolean)) {
     const placement = parsePlacementLine(line);
     if (placement) {
@@ -161,15 +171,17 @@ function parseRawText(text) {
 
     const award = parseAwardLine(line);
     if (award?.type === "winningStreak") awards.winningStreak = award.row;
-    if (award?.type === "biggestOdds") awards.biggestOdds = award.row;
+    if (award?.type === "biggestOdds") awards.biggestOdds.push(...award.rows);
   }
   return { placements, awards };
 }
 
 function parsePlacementLine(line) {
   const match = line.match(/^(\d+)\s+(?:место|place)\.?\s+(.+?)\s+-\s+(.+)$/i);
-  if (!match) return null;
-  const [, place, nickname, tail] = match;
+  const numbered = !match ? line.match(/^(\d+)\.\s+(\S+)\s+(.+)$/) : null;
+  const m = match ?? numbered;
+  if (!m) return null;
+  const [, place, nickname, tail] = m;
   const roi = firstNonEmpty(
     findNumberAfter(tail, /ROI\s*:/i),
     findPercentNumber(tail)
@@ -198,27 +210,48 @@ function parseInlineStats(text) {
   return { predictions, won, lost, units };
 }
 
+function splitAwardNicknameList(segment) {
+  return segment
+    .split(/\s*,\s*|\s+и\s+/i)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function extractStreakAvgOdds(line) {
+  const inParens = line.match(/\([\s\S]*?(?:ср\.?\s*)?(?:коф|коэф|кофф)\.?\s*([\d.,]+)/i);
+  if (inParens) return normalizeNumber(inParens[1]);
+  const loose = line.match(/(?:ср\.?\s*)?(?:коф|коэф|кофф)\.?\s*([\d.,]+)/i);
+  return loose ? normalizeNumber(loose[1]) : "";
+}
+
 function parseAwardLine(line) {
   const lower = line.toLowerCase();
   const isStreak = /сер(и|і)я|streak|consecutive/.test(lower);
-  const isOdds = /коэффициент|коеф|odds|odd|coefficient/.test(lower) && !/roi/.test(lower);
+  const isOdds =
+    /коэффициент|коеф|кофф|коф\.|odds|odd|coefficient/i.test(lower) && !/roi/.test(lower);
   if (!isStreak && !isOdds) return null;
 
   const parts = line.split(/\s+-\s+/).map((part) => part.trim()).filter(Boolean);
   if (parts.length < 3) return null;
-  const nickname = parts[1];
+  const nicknameSegment = parts[1];
   const value = findFirstNumber(parts.slice(2).join(" "));
-  if (!nickname || !value) return null;
+  if (!nicknameSegment || !value) return null;
 
   if (isStreak) {
+    const nicknames = splitAwardNicknameList(nicknameSegment);
+    const nickname = nicknames[0] ?? nicknameSegment;
+    const strick_avg_odds = extractStreakAvgOdds(line);
     return {
       type: "winningStreak",
-      row: { nickname, strick_length: value, strick_avg_odds: "" }
+      row: { nickname, strick_length: value, strick_avg_odds }
     };
   }
+
+  const nicknames = splitAwardNicknameList(nicknameSegment);
+  if (nicknames.length === 0) return null;
   return {
     type: "biggestOdds",
-    row: { nickname, user_pick_value: value }
+    rows: nicknames.map((nickname) => ({ nickname, user_pick_value: value }))
   };
 }
 
@@ -301,7 +334,8 @@ function buildGeneralRows(placements, ocrByName, context) {
 
     if (!context.isMonthly && orig) {
       const numericOrig = Number(orig);
-      if (numericOrig !== 100) {
+      const willClamp = context.clampSeasonalOrigMax100 && numericOrig > 100;
+      if (numericOrig !== 100 && !willClamp) {
         context.notes.push(
           `${placement.nickname}: seasonal orig_bets_count is not 100 (${orig}); source requires review.`
         );
@@ -387,12 +421,16 @@ function mergeCsv(filePath, defaultHeader, updates, keyColumn) {
 
 function normalizeGeneralCsvText(csvText, options = {}) {
   const contestKey = String(options.contestKey ?? "");
+  const isMonthly = Boolean(options.isMonthly);
+  const clampSeasonalOrigMax100 = Boolean(options.clampSeasonalOrigMax100);
+  const notes = options.notes;
   const lines = String(csvText ?? "").split(/\r?\n/);
   const header = lines[0]?.split(",") ?? [];
   const roiIndex = header.indexOf("roi");
   const origIndex = header.indexOf("orig_bets_count");
   const wonIndex = header.indexOf("won");
   const unitsIndex = header.indexOf("units");
+  const nicknameIndex = header.indexOf("nickname");
   if (roiIndex < 0 && origIndex < 0 && wonIndex < 0) return csvText;
 
   const out = [lines[0]];
@@ -404,7 +442,21 @@ function normalizeGeneralCsvText(csvText, options = {}) {
     if (roiIndex >= 0) cols[roiIndex] = roi;
 
     if (origIndex >= 0) {
-      cols[origIndex] = defaultOrigBetsCount(cols[origIndex] ?? "");
+      let origVal = cols[origIndex] ?? "";
+      if (
+        clampSeasonalOrigMax100 &&
+        !isMonthly &&
+        nicknameIndex >= 0 &&
+        notes &&
+        Number(origVal) > 100
+      ) {
+        const prev = String(origVal).trim();
+        notes.push(
+          `${cols[nicknameIndex]}: orig_bets_count clamped from ${prev} to 100 (--clamp-seasonal-orig-max-100).`
+        );
+        origVal = "100";
+      }
+      cols[origIndex] = defaultOrigBetsCount(origVal);
     }
 
     if (wonIndex >= 0) {
