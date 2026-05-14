@@ -31,11 +31,13 @@ if (!options.contest) {
 const repoRoot = process.cwd();
 const contest = options.contest;
 const monthlyMatch = contest.match(/^(\d{4}_[a-z]+)_mon_\d+$/i);
+const monthlyNumber = monthlyMatch ? Number(contest.match(/_mon_(\d+)$/i)?.[1] ?? 0) : null;
 const folderKey = monthlyMatch ? monthlyMatch[1] : contest;
 const isMonthly = Boolean(monthlyMatch);
 const inputDir = resolveExistingInputDir(repoRoot, contest, folderKey);
 const outputDir = path.join(repoRoot, "data_files", "contest_results", folderKey);
 const prefix = contest;
+const rawPrefix = folderKey;
 const notes = [];
 
 if (!existsSync(inputDir)) {
@@ -45,17 +47,22 @@ if (!existsSync(outputDir) && options.apply) {
   mkdirSync(outputDir, { recursive: true });
 }
 
-maybeRenameFinalResultsTxt(inputDir, prefix, options.apply);
+maybeRenameFinalResultsTxt(inputDir, rawPrefix, options.apply);
 
-const rawText = readRawText(inputDir, outputDir, prefix);
-const raw = parseRawText(rawText);
+const rawText = readRawText(inputDir, outputDir, prefix, rawPrefix);
+const raw = parseRawText(rawText, { isMonthly, monthlyNumber });
 
 const jsonFiles = ensureOcrJsonSidecars(inputDir, options);
-const ocrByNickname = parseOcrJsonFiles(jsonFiles);
+const monthlyMonthLabel = isMonthly ? calendarMonthLabel(folderKey, monthlyNumber) : "";
+if (isMonthly && !monthlyMonthLabel) {
+  fail(`Could not resolve calendar month for monthly contest key: ${contest}`);
+}
+const ocrByNickname = parseOcrJsonFiles(jsonFiles, { monthlyMonthLabel });
 const rows = buildGeneralRows(raw.placements, ocrByNickname, {
   isMonthly,
   notes,
   contestKey: contest,
+  monthlyMonthLabel,
   clampSeasonalOrigMax100: options.clampSeasonalOrigMax100
 });
 const awards = raw.awards;
@@ -64,29 +71,44 @@ const generalPath = path.join(outputDir, `${prefix}_cr_general.csv`);
 const oddsPath = path.join(outputDir, `${prefix}_cr_biggest_odds.csv`);
 const streakPath = path.join(outputDir, `${prefix}_cr_winning_streak.csv`);
 
-const generalCsv = normalizeGeneralCsvText(mergeCsv(generalPath, GENERAL_HEADER, rows, "nickname"), {
+const generalCsv = normalizeGeneralCsvText(mergeCsv(generalPath, GENERAL_HEADER, rows, "nickname", {
+  replaceRows: isMonthly
+}), {
   contestKey: prefix,
   isMonthly,
   clampSeasonalOrigMax100: options.clampSeasonalOrigMax100,
   notes
 });
-const oddsCsv = mergeCsv(
+const oddsCsv = isMonthly ? "" : mergeCsv(
   oddsPath,
   BIGGEST_ODDS_HEADER,
   awards.biggestOdds ?? [],
   "nickname"
 );
-const streakCsv = mergeCsv(
+const streakCsv = isMonthly ? "" : mergeCsv(
   streakPath,
   WINNING_STREAK_HEADER,
   awards.winningStreak ? [awards.winningStreak] : [],
   "nickname"
 );
+const monthlyArtifacts = isMonthly ? [] : buildMonthlyArtifactsForSeason({
+  rawText,
+  jsonFiles,
+  folderKey,
+  outputDir,
+  notes,
+  clampSeasonalOrigMax100: options.clampSeasonalOrigMax100
+});
 
 if (options.apply) {
   writeFileSync(generalPath, generalCsv, "utf8");
-  writeFileSync(oddsPath, oddsCsv, "utf8");
-  writeFileSync(streakPath, streakCsv, "utf8");
+  if (!isMonthly) {
+    writeFileSync(oddsPath, oddsCsv, "utf8");
+    writeFileSync(streakPath, streakCsv, "utf8");
+    for (const artifact of monthlyArtifacts) {
+      writeFileSync(artifact.generalPath, artifact.generalCsv, "utf8");
+    }
+  }
 }
 
 printSummary({
@@ -97,6 +119,12 @@ printSummary({
   jsonFiles,
   rows,
   awards,
+  generatedCsv: {
+    general: generalCsv,
+    odds: oddsCsv,
+    streak: streakCsv
+  },
+  monthlyArtifacts,
   notes
 });
 
@@ -144,11 +172,13 @@ function maybeRenameFinalResultsTxt(inputDirValue, prefixValue, apply) {
   notes.push(`Renamed "Итоговые результаты.txt" to ${prefixValue}_raw.txt.`);
 }
 
-function readRawText(inputDirValue, outputDirValue, prefixValue) {
+function readRawText(inputDirValue, outputDirValue, prefixValue, rawPrefixValue = prefixValue) {
   const candidates = [
     path.join(inputDirValue, `${prefixValue}_raw.txt`),
+    path.join(inputDirValue, `${rawPrefixValue}_raw.txt`),
     path.join(inputDirValue, FINAL_RESULTS_TXT),
-    path.join(outputDirValue, `${prefixValue}_raw.txt`)
+    path.join(outputDirValue, `${prefixValue}_raw.txt`),
+    path.join(outputDirValue, `${rawPrefixValue}_raw.txt`)
   ];
   const found = candidates.find((candidate) => existsSync(candidate));
   if (!found) {
@@ -159,10 +189,29 @@ function readRawText(inputDirValue, outputDirValue, prefixValue) {
   return new TextDecoder("windows-1251").decode(buffer);
 }
 
-function parseRawText(text) {
+function parseRawText(text, context = {}) {
   const placements = [];
   const awards = { biggestOdds: [] };
-  for (const line of text.split(/\r?\n/).map((value) => value.trim()).filter(Boolean)) {
+  const lines = text.split(/\r?\n/).map((value) => value.trim()).filter(Boolean);
+  const hasMonthlyOrFinalSections = lines.some((line) => classifyRawSection(line));
+  let currentSection = hasMonthlyOrFinalSections ? "" : "seasonal";
+
+  for (const line of lines) {
+    const section = classifyRawSection(line);
+    if (section) {
+      currentSection = section;
+      continue;
+    }
+
+    if (context.isMonthly) {
+      if (currentSection !== `monthly:${context.monthlyNumber}`) continue;
+      const placement = parseMonthlyPlacementLine(line);
+      if (placement) placements.push(placement);
+      continue;
+    }
+
+    if (hasMonthlyOrFinalSections && currentSection !== "seasonal-final") continue;
+
     const placement = parsePlacementLine(line);
     if (placement) {
       placements.push(placement);
@@ -174,6 +223,34 @@ function parseRawText(text) {
     if (award?.type === "biggestOdds") awards.biggestOdds.push(...award.rows);
   }
   return { placements, awards };
+}
+
+function classifyRawSection(line) {
+  const monthly = line.match(/Результаты\s+([12])-го\s+месячного\s+конкурса/i);
+  if (monthly) return `monthly:${monthly[1]}`;
+  if (/Итоговые\s+результаты\s+конкурса/i.test(line)) return "seasonal-final";
+  return "";
+}
+
+function parseMonthlyPlacementLine(line) {
+  const match = line.match(
+    /^(\d+)\.\s+(\S+)\s+(\d+(?:[.,]\d+)?)\s+([+-]?\d+(?:[.,]\d+)?)\s+([+-]?\d+(?:[.,]\d+)?)\s*%\s*ROI\b(.*)$/i
+  );
+  if (!match) return null;
+
+  const [, place, nickname, betsCount, units, roi, tail] = match;
+  const normalizedBetsCount = normalizeNumber(betsCount);
+  const monthlyNonParticipant = /не\s+участвовал/i.test(tail);
+  if (Number(normalizedBetsCount) < 30 || monthlyNonParticipant) return null;
+
+  return {
+    nickname: nickname.trim(),
+    place: place.trim(),
+    roi: normalizeNumber(roi),
+    explicitCount: normalizedBetsCount,
+    units: normalizeNumber(units),
+    monthlyNonParticipant
+  };
 }
 
 function parsePlacementLine(line) {
@@ -283,56 +360,133 @@ function ensureOcrJsonSidecars(inputDirValue, parsedOptions) {
   ))];
 }
 
-function parseOcrJsonFiles(files) {
+function parseOcrJsonFiles(files, context = {}) {
   const byNickname = new Map();
+  const expectedNames = context.expectedNames;
   for (const file of files) {
     const nickname = path.parse(file).name;
     const entries = JSON.parse(readFileSync(file, "utf8"));
     const descriptions = entries.map((entry) => String(entry.description ?? ""));
-    const stats = parseOcrTotal(descriptions);
+    const stats = context.monthlyMonthLabel
+      ? parseOcrMonth(descriptions, context.monthlyMonthLabel)
+      : parseOcrTotal(descriptions);
     if (stats) byNickname.set(normalizeName(nickname), { nickname, ...stats });
-    else notes.push(`Could not parse Total stats from OCR JSON: ${path.relative(repoRoot, file)}`);
+    else if (context.monthlyMonthLabel && (!expectedNames || expectedNames.has(normalizeName(nickname)))) {
+      notes.push(
+        `Could not parse ${context.monthlyMonthLabel} stats from OCR JSON: ${path.relative(repoRoot, file)}`
+      );
+    } else {
+      notes.push(`Could not parse Total stats from OCR JSON: ${path.relative(repoRoot, file)}`);
+    }
   }
   return byNickname;
+}
+
+function buildMonthlyArtifactsForSeason(context) {
+  const artifacts = [];
+  for (const monthNumber of [1, 2]) {
+    const monthlyKey = `${context.folderKey}_mon_${monthNumber}`;
+    const monthlyMonthLabel = calendarMonthLabel(context.folderKey, monthNumber);
+    if (!monthlyMonthLabel) continue;
+
+    const rawMonthly = parseRawText(context.rawText, { isMonthly: true, monthlyNumber: monthNumber });
+    if (rawMonthly.placements.length === 0) {
+      context.notes.push(`${monthlyKey}: no embedded monthly rows were parsed.`);
+      continue;
+    }
+
+    const expectedNames = new Set(rawMonthly.placements.map((placement) => normalizeName(placement.nickname)));
+    const ocrByNicknameForMonth = parseOcrJsonFiles(context.jsonFiles, { monthlyMonthLabel, expectedNames });
+    const monthlyRows = buildGeneralRows(rawMonthly.placements, ocrByNicknameForMonth, {
+      isMonthly: true,
+      notes: context.notes,
+      contestKey: monthlyKey,
+      monthlyMonthLabel,
+      clampSeasonalOrigMax100: context.clampSeasonalOrigMax100
+    });
+    const generalPathValue = path.join(context.outputDir, `${monthlyKey}_cr_general.csv`);
+    const generalCsvValue = normalizeGeneralCsvText(mergeCsv(
+      generalPathValue,
+      GENERAL_HEADER,
+      monthlyRows,
+      "nickname",
+      { replaceRows: true }
+    ), {
+      contestKey: monthlyKey,
+      isMonthly: true,
+      clampSeasonalOrigMax100: context.clampSeasonalOrigMax100,
+      notes: context.notes
+    });
+
+    artifacts.push({
+      contest: monthlyKey,
+      monthLabel: monthlyMonthLabel,
+      rows: monthlyRows,
+      generalPath: generalPathValue,
+      generalCsv: generalCsvValue
+    });
+  }
+  return artifacts;
 }
 
 function parseOcrTotal(descriptions) {
   for (let index = 0; index < descriptions.length; index += 1) {
     if (descriptions[index] !== "Total") continue;
-    const next = descriptions.slice(index + 1, index + 12);
-    if (!isNumericToken(next[0])) continue;
-    const numbers = [];
-    for (const token of next) {
-      if (isNumericToken(token)) {
-        numbers.push(normalizeNumber(token));
-        continue;
-      }
-      if (String(token).trim() === "%") continue;
-      break;
-    }
-    if (numbers.length >= 4) {
-      return {
-        predictions: numbers[0],
-        won: numbers[1],
-        lost: numbers[2],
-        units: numbers[3],
-        ocrRoi: numbers[4] ?? ""
-      };
-    }
+    const stats = parseOcrStatsAfter(descriptions, index);
+    if (stats) return stats;
   }
   return null;
+}
+
+function parseOcrMonth(descriptions, monthLabel) {
+  for (let index = 0; index < descriptions.length; index += 1) {
+    if (descriptions[index] !== monthLabel) continue;
+    const stats = parseOcrStatsAfter(descriptions, index);
+    if (stats) return stats;
+  }
+  return null;
+}
+
+function parseOcrStatsAfter(descriptions, index) {
+  const next = descriptions.slice(index + 1, index + 14);
+  if (!isNumericToken(next[0])) return null;
+  const numbers = [];
+  for (const token of next) {
+    if (isNumericToken(token)) {
+      numbers.push(normalizeNumber(token));
+      if (numbers.length >= 5) break;
+      continue;
+    }
+    if (String(token).trim() === "%") continue;
+    break;
+  }
+  if (numbers.length < 4) return null;
+  return {
+    predictions: numbers[0],
+    won: numbers[1],
+    lost: numbers[2],
+    units: numbers[3],
+    ocrRoi: numbers[4] ?? ""
+  };
 }
 
 function buildGeneralRows(placements, ocrByName, context) {
   const participantCount = placements.length;
   return placements.map((placement) => {
     const ocr = ocrByName.get(normalizeName(placement.nickname));
-    const orig = defaultOrigBetsCount(firstNonEmpty(placement.explicitCount, placement.predictions, ocr?.predictions));
+    const rawOrig = firstNonEmpty(placement.explicitCount, placement.predictions, ocr?.predictions);
+    const orig = context.isMonthly ? rawOrig : defaultOrigBetsCount(rawOrig);
     const finalCount = context.isMonthly ? orig : "100";
     const roi = normalizeRoi(firstNonEmpty(placement.roi, ocr?.ocrRoi));
-    const deriveUnitsFromRoi = context.contestKey !== "2012_autumn";
+    const deriveUnitsFromRoi = !context.isMonthly && context.contestKey !== "2012_autumn";
 
-    if (!context.isMonthly && orig) {
+    if (context.isMonthly) {
+      if (!ocr) {
+        context.notes.push(
+          `${placement.nickname}: OCR ${context.monthlyMonthLabel} stats are missing; raw monthly values kept.`
+        );
+      }
+    } else if (orig) {
       const numericOrig = Number(orig);
       const willClamp = context.clampSeasonalOrigMax100 && numericOrig > 100;
       if (numericOrig !== 100 && !willClamp) {
@@ -344,7 +498,10 @@ function buildGeneralRows(placements, ocrByName, context) {
     if (placement.roi && ocr?.ocrRoi && Number(normalizeRoi(placement.roi)) !== Number(normalizeRoi(ocr.ocrRoi))) {
       context.notes.push(`${placement.nickname}: raw ROI (${normalizeRoi(placement.roi)}) differs from OCR ROI (${normalizeRoi(ocr.ocrRoi)}); raw ROI kept.`);
     }
-    if (placement.predictions && ocr?.predictions && Number(placement.predictions) !== Number(ocr.predictions)) {
+    if (context.isMonthly && orig && ocr?.predictions && Number(orig) !== Number(ocr.predictions)) {
+      const source = context.isMonthly ? context.monthlyMonthLabel : "Total";
+      context.notes.push(`${placement.nickname}: raw Predictions (${orig}) differs from OCR ${source} Predictions (${ocr.predictions}).`);
+    } else if (!context.isMonthly && placement.predictions && ocr?.predictions && Number(placement.predictions) !== Number(ocr.predictions)) {
       context.notes.push(`${placement.nickname}: raw Predictions (${placement.predictions}) differs from OCR Total Predictions (${ocr.predictions}).`);
     }
     if (placement.won && ocr?.won && Number(normalizeNumber(placement.won)) !== Number(normalizeNumber(ocr.won))) {
@@ -355,12 +512,12 @@ function buildGeneralRows(placements, ocrByName, context) {
     }
 
     const derivedWon = deriveWonFromRoi(roi);
-    if (!placement.won && derivedWon && ocr?.won && Number(derivedWon) !== Number(ocr.won)) {
+    if (!context.isMonthly && !placement.won && derivedWon && ocr?.won && Number(derivedWon) !== Number(ocr.won)) {
       context.notes.push(
         `${placement.nickname}: derived Won from ROI (${derivedWon}) differs from OCR Won (${ocr.won}); derived Won kept.`
       );
     }
-    const won = firstNonEmpty(placement.won, derivedWon, ocr?.won);
+    const won = context.isMonthly ? firstNonEmpty(placement.won, ocr?.won) : firstNonEmpty(placement.won, derivedWon, ocr?.won);
 
     const derivedUnits = deriveUnitsFromRoi ? roi : "";
     if (deriveUnitsFromRoi && roi && ocr?.units && Number(roi) !== Number(ocr.units)) {
@@ -368,9 +525,14 @@ function buildGeneralRows(placements, ocrByName, context) {
         `${placement.nickname}: derived Units from ROI (${roi}) differs from OCR Units (${ocr.units}); derived Units kept.`
       );
     }
-    const units = deriveUnitsFromRoi ? derivedUnits : firstNonEmpty(placement.units, ocr?.units);
+    if (context.isMonthly && placement.units && ocr?.units && Number(placement.units) !== Number(ocr.units)) {
+      context.notes.push(
+        `${placement.nickname}: raw Units (${placement.units}) differs from OCR ${context.monthlyMonthLabel} Units (${ocr.units}); raw Units kept.`
+      );
+    }
+    const units = context.isMonthly ? placement.units : (deriveUnitsFromRoi ? derivedUnits : firstNonEmpty(placement.units, ocr?.units));
     return {
-      annual_points: String(annualPoints(Number(placement.place), participantCount)),
+      annual_points: context.isMonthly ? "" : String(annualPoints(Number(placement.place), participantCount)),
       nickname: placement.nickname,
       place: placement.place,
       final_bets_count: finalCount,
@@ -391,7 +553,7 @@ function annualPoints(place, total) {
   return fromBottom;
 }
 
-function mergeCsv(filePath, defaultHeader, updates, keyColumn) {
+function mergeCsv(filePath, defaultHeader, updates, keyColumn, options = {}) {
   const existing = readCsv(filePath, defaultHeader);
   const keyIndex = existing.header.indexOf(keyColumn);
   const rowMap = new Map(existing.rows.map((row) => [normalizeName(row[keyIndex] ?? ""), row]));
@@ -408,6 +570,13 @@ function mergeCsv(filePath, defaultHeader, updates, keyColumn) {
       }
     }
     rowMap.set(key, row);
+  }
+
+  if (options.replaceRows) {
+    return [existing.header.join(","), ...updates.map((update) => {
+      const key = normalizeName(update[keyColumn] ?? "");
+      return rowMap.get(key) ?? existing.header.map(() => "");
+    }).map((row) => row.join(","))].join("\n") + "\n";
   }
 
   const orderedRows = existing.rows.map((row) => rowMap.get(normalizeName(row[keyIndex] ?? "")) ?? row);
@@ -456,21 +625,38 @@ function normalizeGeneralCsvText(csvText, options = {}) {
         );
         origVal = "100";
       }
-      cols[origIndex] = defaultOrigBetsCount(origVal);
+      cols[origIndex] = isMonthly ? String(origVal ?? "").trim() : defaultOrigBetsCount(origVal);
     }
 
-    if (wonIndex >= 0) {
+    if (!isMonthly && wonIndex >= 0) {
       const won = String(cols[wonIndex] ?? "");
       if (!won && roi) cols[wonIndex] = deriveWonFromRoi(roi);
     }
 
-    if (unitsIndex >= 0 && contestKey !== "2012_autumn") {
+    if (!isMonthly && unitsIndex >= 0 && contestKey !== "2012_autumn") {
       cols[unitsIndex] = roi;
     }
 
     out.push(cols.join(","));
   }
   return out.join("\n") + "\n";
+}
+
+function calendarMonthLabel(contestKey, monthNumber) {
+  const match = String(contestKey ?? "").match(/^(\d{4})_(spring|summer|autumn|winter)$/i);
+  if (!match || !monthNumber) return "";
+  const year = Number(match[1]);
+  const season = match[2].toLowerCase();
+  const monthBySeason = {
+    spring: [3, 4],
+    summer: [6, 7],
+    autumn: [9, 10],
+    winter: [12, 1]
+  };
+  const month = monthBySeason[season]?.[monthNumber - 1];
+  if (!month) return "";
+  const labelYear = season === "winter" && monthNumber === 2 ? year + 1 : year;
+  return `${String(month).padStart(2, "0")}/${labelYear}`;
 }
 
 function readCsv(filePath, defaultHeader) {
@@ -548,6 +734,24 @@ function printSummary(summary) {
   for (const row of summary.rows) console.log(JSON.stringify(row));
   console.log("\nAwards:");
   console.log(JSON.stringify(summary.awards, null, 2));
+  if (!summary.apply) {
+    console.log("\nGenerated cr_general CSV:");
+    console.log(summary.generatedCsv.general.trimEnd());
+    if (summary.generatedCsv.odds) {
+      console.log("\nGenerated cr_biggest_odds CSV:");
+      console.log(summary.generatedCsv.odds.trimEnd());
+    }
+    if (summary.generatedCsv.streak) {
+      console.log("\nGenerated cr_winning_streak CSV:");
+      console.log(summary.generatedCsv.streak.trimEnd());
+    }
+    if (summary.monthlyArtifacts.length > 0) {
+      for (const artifact of summary.monthlyArtifacts) {
+        console.log(`\nGenerated ${artifact.contest}_cr_general CSV (${artifact.monthLabel}):`);
+        console.log(artifact.generalCsv.trimEnd());
+      }
+    }
+  }
   console.log("\nOCR JSON files:");
   for (const file of summary.jsonFiles) console.log(path.relative(repoRoot, file));
   if (summary.notes.length > 0) {

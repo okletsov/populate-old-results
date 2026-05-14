@@ -51,6 +51,9 @@ Notes:
 - For monthly contest keys like `2017_spring_mon_1`, inputs/outputs live under the season folder (e.g. `2017_spring`), but the CSV prefix uses the full key.
 - Raw contest text may be **Windows-1251** encoded; the script reads it accordingly.
 - Seasonal contests use `final_bets_count = 100` (monthly contests do not).
+- Seasonal contest runs also preview and apply embedded monthly `cr_general` CSVs when the raw file contains monthly sections.
+- Monthly contest keys read the matching embedded monthly section from the seasonal raw file, skip rows with fewer than 30 bets or `не участвовал`, leave `annual_points` blank, and keep raw monthly bet counts, units, and ROI.
+- Monthly OCR stats come from the matching calendar month row, not the `Total` row.
 
 ### Run a simple SELECT
 

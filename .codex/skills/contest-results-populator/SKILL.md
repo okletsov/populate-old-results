@@ -36,30 +36,36 @@ If the folder contains **`Итоговые результаты.txt`**, the scri
 - Resolves input files from `data_files/data_to_process/<contest>/`.
 - Resolves output CSVs from `data_files/contest_results/<contest>/`.
 - For monthly contest keys such as `2017_spring_mon_1`, uses `2017_spring` as the folder and the full key as the CSV prefix.
-- Reads raw text as Windows-1251 (from `<contest>_raw.txt`, or from `Итоговые результаты.txt` when the standard name is not present).
+- For seasonal contest keys with embedded monthly sections, also previews and applies monthly `cr_general` outputs for `<contest>_mon_1` and `<contest>_mon_2`.
+- Reads raw text as Windows-1251 (from `<contest>_raw.txt`, the seasonal `<folder>_raw.txt` for monthly keys, or from `Итоговые результаты.txt` when the standard name is not present).
 - Generates missing OCR JSON sidecars from screenshots with `npm run ocr`.
 - Parses raw placements, ROI, explicit bet counts, incomplete/disqualified status, and side awards.
 - **Placements:** Recognizes both `N место. Nickname - …` / `N place. …` and alternate **numbered lines** `N. Nickname …` (ROI from `ROI:` or `%`).
+- **Monthly sections:** For keys such as `2015_winter_mon_1`, reads the matching `Результаты 1-го месячного конкурса` or `Результаты 2-го месячного конкурса` section from the seasonal raw file. Monthly rows use the explicit raw bet count, units, and ROI; rows with fewer than **30** bets or `не участвовал` are skipped.
+- **Monthly OCR:** For monthly contests, reads the calendar month row from profile OCR instead of the `Total` row: winter `mon_1` = `12/<year>`, winter `mon_2` = `01/<year + 1>`, spring = `03`/`04`, summer = `06`/`07`, autumn = `09`/`10`.
 - **Biggest odds:** One raw line can list **several winners** with the same coefficient, separated by **commas** or **и** (e.g. `… - AjaxSpring, ka1manua, Deagle - 10.00`). Each nickname becomes one CSV row. Odds lines are detected using coefficient wording including common typos **`кофф`** / **`коф.`** alongside `коэффициент`, `коеф`, `odds`, etc.
 - **Winning streak:** If the raw line includes average coefficient text such as `(ср. коф. 1.86)`, **`strick_avg_odds`** is filled when the pattern matches.
-- Parses OCR JSON `Total` rows for Total Predictions, Won, Lost, Units, and optional OCR ROI.
+- Parses OCR JSON `Total` rows for seasonal Total Predictions, Won, Lost, Units, and optional OCR ROI.
 - Preserves existing CSV headers exactly.
 - Normalizes `cr_general` values:
-  - If `orig_bets_count` is blank after processing, sets it to `100`.
-  - If `won` is blank and `roi` is present, sets `won = 100 + roi`.
-  - Sets `units = roi` (exception: `2012_autumn`).
+  - For seasonal contests, if `orig_bets_count` is blank after processing, sets it to `100`.
+  - For seasonal contests, if `won` is blank and `roi` is present, sets `won = 100 + roi`.
+  - For seasonal contests, sets `units = roi` (exception: `2012_autumn`).
+  - For monthly contests, keeps `annual_points` blank and keeps raw monthly bet counts, units, and ROI.
   - Strips a leading `+` from positive ROI values (stores ROI without `%`).
   - With **`--clamp-seasonal-orig-max-100`**, caps seasonal `orig_bets_count` at **100** when it would otherwise exceed 100 (see above).
 - Writes these files when `--apply` is used:
   - `<contest>_cr_general.csv`
-  - `<contest>_cr_biggest_odds.csv`
-  - `<contest>_cr_winning_streak.csv`
+  - `<contest>_cr_biggest_odds.csv` (seasonal contests only)
+  - `<contest>_cr_winning_streak.csv` (seasonal contests only)
+  - `<contest>_mon_1_cr_general.csv` / `<contest>_mon_2_cr_general.csv` when a seasonal raw file contains monthly sections
 
 ## Review Rules
 
 After running the script, inspect the printed notifications. Call out anything important in the final answer, especially:
 
 - raw text and OCR disagreements on ROI, bet counts, or placement.
+- monthly calendar OCR rows missing for a participant.
 - raw text `Won` / `Lost` differing from OCR screenshot totals for the same participant.
 - derived `won` (computed as `100 + roi` when raw `won` is missing) differing from OCR `Won` (derived value is kept).
 - derived `units` (always `units = roi`, except `2012_autumn`) differing from OCR `Units` (derived value is kept).
@@ -67,7 +73,7 @@ After running the script, inspect the printed notifications. Call out anything i
 - missing raw side-award data for biggest odds or winning streak.
 - OCR JSON rows that could not be parsed into Total Predictions, Won, Lost, and Units.
 
-For seasonal contests, `final_bets_count` is always `100`; for monthly contests, do not apply that fixed count rule.
+For seasonal contests, `final_bets_count` is always `100`; for monthly contests, `final_bets_count` and `orig_bets_count` both come from the explicit raw monthly bet count and `annual_points` stays blank.
 
 ## Validation
 
