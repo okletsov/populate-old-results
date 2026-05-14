@@ -248,7 +248,7 @@ function parseMonthlyPlacementLine(line) {
     place: place.trim(),
     roi: normalizeNumber(roi),
     explicitCount: normalizedBetsCount,
-    units: normalizeNumber(units),
+    units: normalizePositiveSignlessNumber(units),
     monthlyNonParticipant
   };
 }
@@ -633,8 +633,12 @@ function normalizeGeneralCsvText(csvText, options = {}) {
       if (!won && roi) cols[wonIndex] = deriveWonFromRoi(roi);
     }
 
-    if (!isMonthly && unitsIndex >= 0 && contestKey !== "2012_autumn") {
-      cols[unitsIndex] = roi;
+    if (unitsIndex >= 0) {
+      if (isMonthly) {
+        cols[unitsIndex] = normalizePositiveSignlessNumber(cols[unitsIndex] ?? "");
+      } else if (contestKey !== "2012_autumn") {
+        cols[unitsIndex] = roi;
+      }
     }
 
     out.push(cols.join(","));
@@ -694,6 +698,11 @@ function normalizeNumber(value) {
 }
 
 function normalizeRoi(value) {
+  const normalized = normalizeNumber(String(value ?? "").trim());
+  return normalized.startsWith("+") ? normalized.slice(1) : normalized;
+}
+
+function normalizePositiveSignlessNumber(value) {
   const normalized = normalizeNumber(String(value ?? "").trim());
   return normalized.startsWith("+") ? normalized.slice(1) : normalized;
 }
