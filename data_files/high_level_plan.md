@@ -18,33 +18,34 @@ Notes: reference Test_AddSeasonalContest.java file for existing logic
 7. Do not add a background job execution
 8. Reference ./data_files/missing_contests.csv to learn what entrance fee each seasonal contest should have
 
-### Phase 3: Link participants to contests
+### ✅ COMPLETED Phase 3: Link participants to contests
 Note: reference Test_Participants.java file for existing logic
-1. Inspect contest results located in data_files for a given contest
-2. Add an entrance_fee amount to the cr_finance table for each participant
+1. Inspect cr_general.csv located in data_files for each contest to grab the list of participants for the insert into user_seasonal_contest_participation table
+2. Add an entrance_fee amount to the cr_finance table for each participant (id=12)
 3. Add an offset amount that equals to the entrance fee amount to the finance_offset_table with finance_actoun_id=14 
 4. Add a user-contest link to user_seasonal_contest_participation table
 5. Do not add a background job execution
 6. Do not execute addUser logic
 7. Do not attempt to update user_nickname.portal_id
+8. Run the saldo.sql and ensure saldo value for a given user matches to the one from sald.csv file assuming all sql insertions were made. If a participand doesn't get returned by saldo.sql assume his saldo is 0 and notify me about such case
 
 *For all phases that follow*: 
 - reference Test_EndContest for existing logic
 - reference award_rules data in data_files folder to calculate award distribution
 - award_rules.csv lists percentage value for each nomination and take precedence over the java code in Test_EndContest file
 
-### Phase 3: Insert cr_general data
+### Phase 4: Insert cr_general data
 1. Inspect contest results located in data_files for a given contest
 2. Insert contest results data for each participant for seasonal contest
 3. If montly contest results exist in data_files:
     1. Insert month 1 contest results
     2. Insert month 2 contest results 
 
-### Phase 4: Insert cr_winning_strick and cr_general data 
+### Phase 5: Insert cr_winning_strick and cr_general data 
 1. Inspect contest results located in data_files for a given contest
 2. Insert cr_winning_strick and cr_biggest_odds records
 
-### Phase 5: Insert cr_finance data
+### Phase 6: Insert cr_finance data
 1. Insert awards for seasonal contest
 2. If montly contest results exist in data_files:
     1. Insert awards for month 1 contest
@@ -55,3 +56,4 @@ Note: reference Test_Participants.java file for existing logic
 6. For each award add an offset amount that equals to the award amount to the finance_offset_table with finance_actoun_id=13
 7. Award ids can be found in the finance_actions table
 8. For the odds column individual nicknames may be separated with dashes to indicate several winners in this nomination
+9. Run the saldo.sql and ensure saldo value for a given user matches to the one from sald.csv file assuming all sql insertions were made. If a participand doesn't get returned by saldo.sql assume his saldo is 0 and notify me about such case
