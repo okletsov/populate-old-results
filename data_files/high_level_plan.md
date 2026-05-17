@@ -7,8 +7,8 @@ It'll be done by generating INSERT SQL queries based on the database schema insp
 2. Compare them to what already exists in the database in user and user_nickname tables 
 3. Add missing usernames
 
-### Phase 2: Create missing contests:
-Note: reference Test_AddSeasonalContest.java file for existing logic
+### ✅ COMPLETED Phase 2: Create missing contests:
+Notes: reference Test_AddSeasonalContest.java file for existing logic
 1. Seasonal
 2. Month 1 (if exists)
 3. Month 2 (if exists)
@@ -16,6 +16,7 @@ Note: reference Test_AddSeasonalContest.java file for existing logic
 5. All contests must be inserted in an inactive state
 6. Do not link annual and seasonal contests
 7. Do not add a background job execution
+8. Reference ./data_files/missing_contests.csv to learn what entrance fee each seasonal contest should have
 
 ### Phase 3: Link participants to contests
 Note: reference Test_Participants.java file for existing logic
