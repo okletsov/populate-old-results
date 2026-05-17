@@ -2,13 +2,13 @@
 Populate mariadb_prod database with missing contest results from prior years.
 It'll be done by generating INSERT SQL queries based on the database schema inspection and csv files
 
-### Phase 1: Populate missing Usernames
+### ✅ COMPLETED Phase 1: Populate missing Usernames
 1. Retreive all usernames from data_files
 2. Compare them to what already exists in the database in user and user_nickname tables 
 3. Add missing usernames
 
 ### Phase 2: Create missing contests:
-Note: reference @Test_AddSeasonalContest.java file for existing logic
+Note: reference Test_AddSeasonalContest.java file for existing logic
 1. Seasonal
 2. Month 1 (if exists)
 3. Month 2 (if exists)
@@ -18,7 +18,7 @@ Note: reference @Test_AddSeasonalContest.java file for existing logic
 7. Do not add a background job execution
 
 ### Phase 3: Link participants to contests
-Note: reference @Test_Participants.java file for existing logic
+Note: reference Test_Participants.java file for existing logic
 1. Inspect contest results located in data_files for a given contest
 2. Add an entrance_fee amount to the cr_finance table for each participant
 3. Add an offset amount that equals to the entrance fee amount to the finance_offset_table with finance_actoun_id=14 
@@ -28,7 +28,7 @@ Note: reference @Test_Participants.java file for existing logic
 7. Do not attempt to update user_nickname.portal_id
 
 *For all phases that follow*: 
-- reference @Test_EndContest for existing logic
+- reference Test_EndContest for existing logic
 - reference award_rules data in data_files folder to calculate award distribution
 - award_rules.csv lists percentage value for each nomination and take precedence over the java code in Test_EndContest file
 
