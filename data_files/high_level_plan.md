@@ -35,7 +35,7 @@ Note: reference Test_Participants.java file for existing logic
 - award_rules.csv lists percentage value for each nomination and take precedence over the java code in Test_EndContest file
 
 ### Phase 4: Insert cr_general data
-1. Inspect contest results located in data_files for a given contest
+1. Inspect contest results located in data_files/contest_results for a given contest
 2. Insert contest results data for each participant for seasonal contest
 3. If montly contest results exist in data_files:
     1. Insert month 1 contest results

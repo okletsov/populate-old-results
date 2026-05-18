@@ -1,6 +1,6 @@
-annual_points,nickname,place,final_bets_count,orig_bets_count,won,lost,units,roi
-8,Dortmund,1,100,100,116.1,41.0,16.1,16.1
-6,CapUA,2,100,100,109.35,45.0,9.35,9.35
-4,stan507,3,100,100,92.9,51.0,-7.1,-7.1
-2,Ajax-II,4,100,100,87.7,,-12.3,-12.3
-1,BeTeLCRiMea,5,100,100,79.8,71.0,-20.2,-20.2
+annual_points,nickname,place,final_bets_count,orig_bets_count,won,lost,units,roi,id,user_id,contest_id,active_days
+8,Dortmund,1,100,100,116.1,41.0,16.1,16.1,,,
+6,CapUA,2,100,100,109.35,45.0,9.35,9.35,,,
+4,stan507,3,100,100,92.9,51.0,-7.1,-7.1,,,
+2,Ajax-II,4,100,100,87.7,,-12.3,-12.3,,,
+1,BeTeLCRiMea,5,100,100,79.8,71.0,-20.2,-20.2,,,

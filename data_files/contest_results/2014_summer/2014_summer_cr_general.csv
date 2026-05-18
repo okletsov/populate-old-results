@@ -1,5 +1,5 @@
-annual_points,nickname,place,final_bets_count,orig_bets_count,won,lost,units,roi
-7,Ajax-II,1,100,101,116.0,60.0,17.30,16.0
-5,Ciklum,2,100,104,92.3,49.5,-7.68,-7.7
-3,BetTennis,3,100,104,91.3,49.0,-8.73,-8.7
-1,OrionLTD,4,100,100,82.7,81.0,-17.25,-17.3
+annual_points,nickname,place,final_bets_count,orig_bets_count,won,lost,units,roi,id,user_id,contest_id,active_days
+7,Ajax-II,1,100,101,116.0,60.0,17.30,16.0,,,
+5,Ciklum,2,100,104,92.3,49.5,-7.68,-7.7,,,
+3,BetTennis,3,100,104,91.3,49.0,-8.73,-8.7,,,
+1,OrionLTD,4,100,100,82.7,81.0,-17.25,-17.3,,,

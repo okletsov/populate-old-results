@@ -1,7 +1,7 @@
-annual_points,nickname,place,final_bets_count,orig_bets_count,won,lost,units,roi
-9,BeTeLGeuSe,1,100,100,115.4,38.26,10.0,15.4
-7,Ajax,2,100,100,114.9,64.0,17.31,14.9
-5,Stan87,3,100,100,105,43.0,5.02,5
-3,Kanonier,4,100,100,87.8,57.0,-12.211,-12.2
-2,Deagle,5,100,100,85.6,52.0,-14.35,-14.4
-1,Ka2man,6,100,100,75.8,58.0,-24.21,-24.2
+annual_points,nickname,place,final_bets_count,orig_bets_count,won,lost,units,roi,id,user_id,contest_id,active_days
+9,BeTeLGeuSe,1,100,100,115.4,38.26,10.0,15.4,,,
+7,Ajax,2,100,100,114.9,64.0,17.31,14.9,,,
+5,Stan87,3,100,100,105,43.0,5.02,5,,,
+3,Kanonier,4,100,100,87.8,57.0,-12.211,-12.2,,,
+2,Deagle,5,100,100,85.6,52.0,-14.35,-14.4,,,
+1,Ka2man,6,100,100,75.8,58.0,-24.21,-24.2,,,

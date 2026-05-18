@@ -1,8 +1,8 @@
-annual_points,nickname,place,final_bets_count,orig_bets_count,won,lost,units,roi
-10,Ajax,1,100,100,129.8,,29.8,29.8
-8,Gunners_Fan,2,100,100,129.2,,29.2,29.2
-6,AlegriA,3,100,100,106.6,,6.6,6.6
-4,BeTeLGeuSeWinner,4,100,100,99.4,,-0.6,-0.6
-3,Deagle,5,100,100,97.9,,-2.1,-2.1
-2,stan507,6,100,100,88.12,,-11.88,-11.88
-1,Gorg,7,100,100,88.07,,-11.93,-11.93
+annual_points,nickname,place,final_bets_count,orig_bets_count,won,lost,units,roi,id,user_id,contest_id,active_days
+10,Ajax,1,100,100,129.8,,29.8,29.8,,,
+8,Gunners_Fan,2,100,100,129.2,,29.2,29.2,,,
+6,AlegriA,3,100,100,106.6,,6.6,6.6,,,
+4,BeTeLGeuSeWinner,4,100,100,99.4,,-0.6,-0.6,,,
+3,Deagle,5,100,100,97.9,,-2.1,-2.1,,,
+2,stan507,6,100,100,88.12,,-11.88,-11.88,,,
+1,Gorg,7,100,100,88.07,,-11.93,-11.93,,,

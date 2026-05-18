@@ -1,8 +1,8 @@
-annual_points,nickname,place,final_bets_count,orig_bets_count,won,lost,units,roi
-,Ars,1,60,60,88.35,26.0,28.35,47.3
-,Arsii,2,41,41,45.16,21.0,4.16,10.1
-,CapUA,3,49,49,52.00,27.0,3.00,6.1
-,Dnepr,4,31,31,38.01,17.0,1.01,3.3
-,Ajax,5,48,48,48.84,30.0,0.84,1.7
-,gorgUA,6,40,40,38.72,25.0,-1.28,-3.2
-,BeTeL,7,30,30,19.88,20.0,-10.12,-33.7
+annual_points,nickname,place,final_bets_count,orig_bets_count,won,lost,units,roi,id,user_id,contest_id,active_days
+,Ars,1,60,60,88.35,26.0,28.35,47.3,,,
+,Arsii,2,41,41,45.16,21.0,4.16,10.1,,,
+,CapUA,3,49,49,52.00,27.0,3.00,6.1,,,
+,Dnepr,4,31,31,38.01,17.0,1.01,3.3,,,
+,Ajax,5,48,48,48.84,30.0,0.84,1.7,,,
+,gorgUA,6,40,40,38.72,25.0,-1.28,-3.2,,,
+,BeTeL,7,30,30,19.88,20.0,-10.12,-33.7,,,
