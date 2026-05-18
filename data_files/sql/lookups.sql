@@ -1,6 +1,6 @@
-SET @nickname = 'stan507';
-SET @year = '2012';
-SET @season = 'autumn';
+SET @nickname = 'example_nickname';
+SET @year = 'YYYY';
+SET @season = 'example_season';
 SET @month = 1;
 
 -- user_id lookup
