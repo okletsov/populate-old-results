@@ -1,4 +1,4 @@
-nickname,user_pick_value
-AjaxSpring,10.00
-ka1manua,10.00
-Deagle,10.00
+﻿id,user_id,contest_id,nickname,user_pick_value
+,,,AjaxSpring,10.00
+,,,ka1manua,10.00
+,,,Deagle,10.00

@@ -1,4 +1,4 @@
-nickname,user_pick_value
-Ajax,15.00
-BeTeL,15.00
-stan507,15.00
+﻿id,user_id,contest_id,nickname,user_pick_value
+,,,Ajax,15.00
+,,,BeTeL,15.00
+,,,stan507,15.00
