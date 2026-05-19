@@ -1,2 +1,2 @@
-nickname,strick_length,strick_avg_odds
-Deagle,7,
+﻿id,user_id,contest_id,nickname,strick_length,strick_avg_odds
+,,,Deagle,7,
