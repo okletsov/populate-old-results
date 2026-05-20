@@ -1,0 +1,7 @@
+﻿-- Auto-generated INSERT statements
+-- Source: 2016_winter_cr_biggest_odds.csv
+-- Table:  cr_biggest_odds
+
+INSERT INTO `cr_biggest_odds` (id, user_id, contest_id, nickname, user_pick_value) VALUES (UUID(), '11b6372c-c909-11e8-8022-74852a015562', '561794fc-519e-11f1-a6f3-000017024a87', 'Ajax', 15.00);
+INSERT INTO `cr_biggest_odds` (id, user_id, contest_id, nickname, user_pick_value) VALUES (UUID(), '0ca7046d-c909-11e8-8022-74852a015562', '561794fc-519e-11f1-a6f3-000017024a87', 'BeTeL', 15.00);
+INSERT INTO `cr_biggest_odds` (id, user_id, contest_id, nickname, user_pick_value) VALUES (UUID(), '0f9994d6-c909-11e8-8022-74852a015562', '561794fc-519e-11f1-a6f3-000017024a87', 'stan507', 15.00);

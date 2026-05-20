@@ -1,0 +1,10 @@
+﻿-- Auto-generated INSERT statements
+-- Source: 2013_winter_cr_general.csv
+-- Table:  cr_general
+
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (9, 'BeTeLGeuSe', 1, 100, 100, 115.4, 38.26, 10.0, 15.4, UUID(), '0ca7046d-c909-11e8-8022-74852a015562', '561739a3-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (7, 'Ajax', 2, 100, 100, 114.9, 64.0, 17.31, 14.9, UUID(), '11b6372c-c909-11e8-8022-74852a015562', '561739a3-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (5, 'Stan87', 3, 100, 100, 105, 43.0, 5.02, 5, UUID(), '0f9994d6-c909-11e8-8022-74852a015562', '561739a3-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (3, 'Kanonier', 4, 100, 100, 87.8, 57.0, -12.211, -12.2, UUID(), '10912e61-e385-11e8-a9e2-74852a015562', '561739a3-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (2, 'Deagle', 5, 100, 100, 85.6, 52.0, -14.35, -14.4, UUID(), '0e2ae8fd-c909-11e8-8022-74852a015562', '561739a3-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (1, 'Ka2man', 6, 100, 100, 75.8, 58.0, -24.21, -24.2, UUID(), '10cdadf5-c909-11e8-8022-74852a015562', '561739a3-519e-11f1-a6f3-000017024a87', NULL);

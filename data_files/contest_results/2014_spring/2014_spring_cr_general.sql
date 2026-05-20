@@ -1,0 +1,11 @@
+﻿-- Auto-generated INSERT statements
+-- Source: 2014_spring_cr_general.csv
+-- Table:  cr_general
+
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (10, 'Ajax', 1, 100, 100, 129.8, NULL, 29.8, 29.8, UUID(), '11b6372c-c909-11e8-8022-74852a015562', '561739d4-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (8, 'Gunners_Fan', 2, 100, 100, 129.2, NULL, 29.2, 29.2, UUID(), '10912e61-e385-11e8-a9e2-74852a015562', '561739d4-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (6, 'AlegriA', 3, 100, 100, 106.6, NULL, 6.6, 6.6, UUID(), '09d7d5d1-c909-11e8-8022-74852a015562', '561739d4-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (4, 'BeTeLGeuSeWinner', 4, 100, 100, 99.4, NULL, -0.6, -0.6, UUID(), '0ca7046d-c909-11e8-8022-74852a015562', '561739d4-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (3, 'Deagle', 5, 100, 100, 97.9, NULL, -2.1, -2.1, UUID(), '0e2ae8fd-c909-11e8-8022-74852a015562', '561739d4-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (2, 'stan507', 6, 100, 100, 88.12, NULL, -11.88, -11.88, UUID(), '0f9994d6-c909-11e8-8022-74852a015562', '561739d4-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (1, 'Gorg', 7, 100, 100, 88.07, NULL, -11.93, -11.93, UUID(), '12b31bfb-c909-11e8-8022-74852a015562', '561739d4-519e-11f1-a6f3-000017024a87', NULL);

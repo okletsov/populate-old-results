@@ -1,0 +1,12 @@
+﻿-- Auto-generated INSERT statements
+-- Source: 2015_winter_cr_general.csv
+-- Table:  cr_general
+
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (11, 'Deagle', 1, 100, 107, 118.0, 33.0, 18.0, 18.0, UUID(), '0e2ae8fd-c909-11e8-8022-74852a015562', '56173cb2-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (9, 'Ajax', 2, 100, 99, 115.9, 65.0, 15.9, 15.9, UUID(), '11b6372c-c909-11e8-8022-74852a015562', '56173cb2-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (7, 'stan507', 3, 100, 100, 106.3, 51.0, 6.3, 6.3, UUID(), '0f9994d6-c909-11e8-8022-74852a015562', '56173cb2-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (5, 'NewHorizons', 4, 100, 100, 102.9, 61.0, 2.9, 2.9, UUID(), '09d7d5d1-c909-11e8-8022-74852a015562', '56173cb2-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (4, 'BeTeL', 5, 100, 100, 98.3, 63.0, -1.7, -1.7, UUID(), '0ca7046d-c909-11e8-8022-74852a015562', '56173cb2-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (3, 'Arsii', 6, 100, 100, 98.1, 66.0, -1.9, -1.9, UUID(), '10912e61-e385-11e8-a9e2-74852a015562', '56173cb2-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (2, 'Gorg', 7, 100, 99, 87.7, 51.0, -12.3, -12.3, UUID(), '12b31bfb-c909-11e8-8022-74852a015562', '56173cb2-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (1, 'ka1manua', 8, 100, 100, 79.3, NULL, -20.7, -20.7, UUID(), '10cdadf5-c909-11e8-8022-74852a015562', '56173cb2-519e-11f1-a6f3-000017024a87', NULL);

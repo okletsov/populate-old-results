@@ -1,0 +1,10 @@
+﻿-- Auto-generated INSERT statements
+-- Source: 2015_winter_mon_2_cr_general.csv
+-- Table:  cr_general
+
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (NULL, 'Ajax', 1, 30, 30, 41.88, 18.0, 11.88, 39.6, UUID(), '11b6372c-c909-11e8-8022-74852a015562', '56173d02-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (NULL, 'NewHorizons', 2, 31, 31, 39.76, 15.0, 8.76, 28.3, UUID(), '09d7d5d1-c909-11e8-8022-74852a015562', '56173d02-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (NULL, 'Deagle', 3, 45, 45, 55.66, 14.0, 6.66, 14.8, UUID(), '0e2ae8fd-c909-11e8-8022-74852a015562', '56173d02-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (NULL, 'Arsii', 4, 41, 41, 44.34, 27.0, 3.34, 8.1, UUID(), '10912e61-e385-11e8-a9e2-74852a015562', '56173d02-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (NULL, 'BeTeL', 5, 47, 47, 46.35, 27.0, -0.65, -1.4, UUID(), '0ca7046d-c909-11e8-8022-74852a015562', '56173d02-519e-11f1-a6f3-000017024a87', NULL);
+INSERT INTO `cr_general` (annual_points, nickname, place, final_bets_count, orig_bets_count, won, lost, units, roi, id, user_id, contest_id, active_days) VALUES (NULL, 'ka1manua', 6, 49, 49, NULL, NULL, -3.02, -6.2, UUID(), '10cdadf5-c909-11e8-8022-74852a015562', '56173d02-519e-11f1-a6f3-000017024a87', NULL);
