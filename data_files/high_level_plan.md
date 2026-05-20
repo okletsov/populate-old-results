@@ -34,14 +34,14 @@ Note: reference Test_Participants.java file for existing logic
 - reference award_rules data in data_files folder to calculate award distribution
 - award_rules.csv lists percentage value for each nomination and take precedence over the java code in Test_EndContest file
 
-### Phase 4: Insert cr_general data
+### ✅ COMPLETED Phase 4: Insert cr_general data
 1. Inspect contest results located in data_files/contest_results for a given contest
 2. Insert contest results data for each participant for seasonal contest
 3. If montly contest results exist in data_files:
     1. Insert month 1 contest results
     2. Insert month 2 contest results 
 
-### Phase 5: Insert cr_winning_strick and cr_general data 
+### ✅ COMPLETED Phase 5: Insert cr_winning_strick and cr_biggest_odds data 
 1. Inspect contest results located in data_files for a given contest
 2. Insert cr_winning_strick and cr_biggest_odds records
 
